@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CycleTrack V7</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#172033; --muted:#687386;
+  --primary:#6c4cff; --primary2:#8d73ff; --line:#e5e8ef;
+  --good:#168a5b; --warn:#b87900; --danger:#c44747; --soft:#f0edff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#6044e8,#8c70ff);color:white;padding:22px 18px 28px;border-radius:0 0 26px 26px}
+header h1{margin:0;font-size:25px} header p{margin:6px 0 0;opacity:.9;font-size:14px}
+main{max-width:900px;margin:-12px auto 90px;padding:0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;margin:14px 0;box-shadow:0 5px 18px rgba(25,35,60,.05)}
+h2,h3{margin:0 0 10px} h2{font-size:19px} h3{font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select,textarea,button{font:inherit}
+input,select,textarea{width:100%;border:1px solid #d9deea;border-radius:11px;padding:11px;background:white;color:var(--text)}
+textarea{min-height:80px;resize:vertical}
+button{border:0;border-radius:11px;padding:11px 15px;font-weight:750;cursor:pointer}
+.primary{background:var(--primary);color:#fff}.secondary{background:#f0edff;color:#5239d6}
+.danger{background:#fff0f0;color:var(--danger)}
+.row{display:flex;gap:9px;flex-wrap:wrap}.row>*{flex:1}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+@media(max-width:560px){.statgrid{grid-template-columns:1fr 1fr}}
+.stat{background:#f8f9fc;border-radius:14px;padding:12px}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:var(--muted)}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:800;background:var(--soft);color:#553bd6}
+.good{background:#e9f8f1;color:var(--good)} .warn{background:#fff6df;color:var(--warn)} .dangerbg{background:#ffeded;color:var(--danger)}
+.muted{color:var(--muted);font-size:13px;line-height:1.55}
+.bigdate{font-size:30px;font-weight:850;margin:3px 0}
+.signal{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.signal:last-child{border-bottom:0}.signal small{color:var(--muted)}
+.hidden{display:none!important}
+nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+nav button{background:transparent;border-radius:0;max-width:180px;width:25%;font-size:12px;color:var(--muted)}
+nav button.active{color:var(--primary);font-weight:850}
+.section{display:none}.section.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}
+.notice{border-left:4px solid var(--primary);background:#f7f5ff;padding:12px;border-radius:10px;font-size:13px;line-height:1.5}
+.footer-note{font-size:11px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <h1>CycleTrack V7</h1>
+  <p>Evidence-based cycle, fertility-sign and ovulation-pattern tracking</p>
+</header>
+
+<main>
+<section id="home" class="section active">
+  <div class="card">
+    <h2>Today's cycle</h2>
+    <div id="cycleSummary"></div>
+  </div>
+
+  <div class="card">
+    <h2>Estimated ovulation window</h2>
+    <div id="ovulationSummary"></div>
+  </div>
+
+  <div class="card">
+    <h2>What your data is showing</h2>
+    <div id="signals"></div>
+  </div>
+
+  <div class="card">
+    <h2>Prediction evidence</h2>
+    <div id="evidence"></div>
+  </div>
+
+  <div class="card">
+    <h2>Important</h2>
+    <div class="notice">
+      CycleTrack provides estimates and pattern tracking, not a diagnosis or guarantee of ovulation, fertility, pregnancy, or infertility. A positive ovulation test usually indicates an LH surge, but it does not prove that ovulation occurred. A sustained basal-temperature rise can provide retrospective evidence of an ovulation pattern. Fertile-type cervical mucus is a useful fertility sign, but timing varies between people and cycles. Do not use this calendar alone as contraception.
+    </div>
+  </div>
+</section>
+
+<section id="log" class="section">
+  <div class="card">
+    <h2>Daily health log</h2>
+    <p class="muted">Add observations for today or another date. These signals help the app describe patterns over time.</p>
+    <div class="grid">
+      <div><label>Date</label><input id="logDate" type="date"></div>
+      <div><label>Mood</label><select id="mood"><option>Not recorded</option><option>Good</option><option>Okay</option><option>Low</option><option>Irritable</option><option>Anxious</option></select></div>
+      <div><label>Pain</label><select id="pain"><option>None</option><option>Mild</option><option>Moderate</option><option>Severe</option></select></div>
+      <div><label>Cervical mucus</label><select id="mucus"><option>Not recorded</option><option>None/dry</option><option>Sticky</option><option>Creamy</option><option>Watery</option><option>Egg-white/stretchy</option></select></div>
+      <div><label>Basal body temperature (°C)</label><input id="bbt" type="number" step="0.01" min="30" max="45" placeholder="Optional"></div>
+      <div><label>Ovulation test</label><select id="opk"><option>Not tested</option><option>Negative</option><option>Positive</option></select></div>
+    </div>
+    <div style="margin-top:12px"><label>Notes</label><textarea id="notes" placeholder="Anything you want to remember"></textarea></div>
+    <div class="row" style="margin-top:12px"><button class="primary" onclick="saveLog()">Save daily log</button><button class="secondary" onclick="clearLogForm()">Clear</button></div>
+  </div>
+  <div class="card"><h2>Recent observations</h2><div id="logHistory"></div></div>
+</section>
+
+<section id="periods" class="section">
+  <div class="card">
+    <h2>Period history</h2>
+    <p class="muted">Day 1 is the first day of proper menstrual bleeding, not spotting.</p>
+    <div class="grid">
+      <div><label>New period start date</label><input id="periodDate" type="date"></div>
+      <div><label>Bleeding days</label><input id="bleedDays" type="number" min="1" max="20" placeholder="Optional"></div>
+      <div><label>Flow</label><select id="flow"><option>Not recorded</option><option>Light</option><option>Medium</option><option>Heavy</option></select></div>
+      <div><label>Period symptoms</label><input id="periodSymptoms" placeholder="e.g. cramps, headache"></div>
+    </div>
+    <button class="primary" style="margin-top:12px" onclick="savePeriod()">Save period</button>
+  </div>
+  <div class="card"><h2>Cycle statistics</h2><div id="stats"></div></div>
+  <div class="card"><h2>History</h2><div id="periodHistory"></div></div>
+</section>
+
+<section id="profile" class="section">
+  <div class="card">
+    <h2>Profile</h2>
+    <div class="grid">
+      <div><label>Name</label><input id="profileName" placeholder="Your name"></div>
+      <div><label>Usual cycle length (optional)</label><input id="usualCycle" type="number" min="15" max="100" placeholder="e.g. 28"></div>
+      <div><label>Reminder preference</label><select id="reminder"><option>Off</option><option>Daily</option><option>Before predicted period</option></select></div>
+    </div>
+    <button class="primary" style="margin-top:12px" onclick="saveProfile()">Save profile</button>
+  </div>
+  <div class="card">
+    <h2>How V7 interprets signals</h2>
+    <div class="signal"><div><b>Calendar history</b><br><small>Provides a baseline estimate from previous cycle lengths.</small></div><span class="badge">Baseline</span></div>
+    <div class="signal"><div><b>Egg-white/stretchy mucus</b><br><small>Recorded as a fertile-type mucus observation.</small></div><span class="badge">Fertility sign</span></div>
+    <div class="signal"><div><b>Positive ovulation test</b><br><small>Suggests an LH surge. It does not prove ovulation.</small></div><span class="badge">LH signal</span></div>
+    <div class="signal"><div><b>BBT pattern</b><br><small>A sustained rise can provide retrospective evidence of an ovulation pattern.</small></div><span class="badge">Retrospective</span></div>
+    <div class="signal"><div><b>Conflicting signals</b><br><small>The app reports uncertainty instead of forcing a single conclusion.</small></div><span class="badge warn">Uncertainty</span></div>
+  </div>
+</section>
+</main>
+
+<nav>
+<button class="active" onclick="showSection('home',this)">Home</button>
+<button onclick="showSection('log',this)">Daily Log</button>
+<button onclick="showSection('periods',this)">Periods</button>
+<button onclick="showSection('profile',this)">Profile</button>
+</nav>
+
+<script>
+const KEY='cycletrack_v7';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"periods":[],"logs":[],"profile":{}}');
+
+function saveDB(){localStorage.setItem(KEY,JSON.stringify(db));}
+function isoToday(){return new Date().toISOString().slice(0,10)}
+function fmt(s){if(!s)return 'Not available'; return new Date(s+'T12:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}
+function addDays(s,n){let d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+function diff(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000)}
+function median(a){if(!a.length)return null;let x=[...a].sort((a,b)=>a-b),m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function recentPeriods(){return [...db.periods].sort((a,b)=>b.date.localeCompare(a.date))}
+function cycleLengths(){
+ const p=recentPeriods().map(x=>x.date).sort();
+ let out=[]; for(let i=1;i<p.length;i++){let n=diff(p[i-1],p[i]); if(n>=15&&n<=100)out.push(n)}
+ return out.slice(-12);
+}
+function baseline(){
+ const ls=cycleLengths(), med=median(ls);
+ if(med)return {value:Math.round(med),n:ls.length,ls};
+ const u=Number(db.profile.usualCycle);
+ return {value:(u>=15&&u<=100?u:28),n:0,ls:[]};
+}
+function current(){
+ const p=recentPeriods()[0]; if(!p)return null;
+ let day=diff(p.date,isoToday())+1;
+ if(day<1)return null;
+ return {p,day};
+}
+function bbtPattern(){
+ const logs=[...db.logs].filter(x=>x.bbt).sort((a,b)=>a.date.localeCompare(b.date));
+ if(logs.length<5)return {status:'insufficient',rise:null};
+ // A practical pattern flag, deliberately not used as a proof of ovulation.
+ let best=null;
+ for(let i=3;i<logs.length;i++){
+   const prior=logs.slice(Math.max(0,i-6),i).map(x=>Number(x.bbt));
+   if(prior.length<3)continue;
+   const base=prior.reduce((a,b)=>a+b,0)/prior.length;
+   const recent=logs.slice(i,Math.min(logs.length,i+3)).map(x=>Number(x.bbt));
+   if(recent.length>=2 && recent.every(t=>t>base+0.2)){
+      best={date:logs[i].date,delta:Math.round((recent[0]-base)*100)/100}; 
+   }
+ }
+ return best?{status:'rise',rise:best}:{status:'none',rise:null};
+}
+function signalData(){
+ const logs=[...db.logs].sort((a,b)=>a.date.localeCompare(b.date));
+ const positive=logs.filter(x=>x.opk==='Positive').at(-1);
+ const mucus=logs.filter(x=>x.mucus==='Egg-white/stretchy'||x.mucus==='Watery').at(-1);
+ const bbt=bbtPattern();
+ return {positive,mucus,bbt};
+}
+function estimate(){
+ const c=current(), base=baseline();
+ if(!c)return null;
+ const next=addDays(c.p.date,base.value);
+ const calOv=addDays(next,-14);
+ const s=signalData();
+ const candidates=[];
+ if(s.positive)candidates.push({date:addDays(s.positive.date,1),type:'positive ovulation test'});
+ if(s.mucus)candidates.push({date:s.mucus.date,type:'fertile-type mucus'});
+ if(s.bbt.status==='rise')candidates.push({date:s.bbt.rise.date,type:'BBT rise pattern'});
+ let recentCandidate=candidates.filter(x=>x.date<=isoToday()||x.type==='positive ovulation test').at(-1);
+ let center=calOv, label='Calendar-based estimate';
+ if(s.positive && diff(s.positive.date,isoToday())>=0 && diff(s.positive.date,isoToday())<=5){
+   center=addDays(s.positive.date,1); label='LH-surge signal plus calendar estimate';
+ } else if(s.bbt.status==='rise'){
+   center=s.bbt.rise.date; label='Retrospective BBT pattern';
+ } else if(s.mucus){
+   center=s.mucus.date; label='Fertile-type mucus signal plus calendar estimate';
+ }
+ let spread=base.n<2?3:base.n<4?3:2;
+ if(base.ls.length){let mad=median(base.ls.map(x=>Math.abs(x-base.value)))||0;spread=clamp(Math.round(2+mad*.6),2,6)}
+ return {next,calOv,center,label,spread,base,s};
+}
+function confidence(e){
+ if(!e)return ['Limited','warn'];
+ let score=0;
+ if(e.base.n>=4)score+=2; else if(e.base.n>=2)score++;
+ if(e.s.positive)score+=2;
+ if(e.s.mucus)score++;
+ if(e.s.bbt.status==='rise')score+=2;
+ if(score>=5)return ['Good','good'];
+ if(score>=3)return ['Moderate','warn'];
+ return ['Limited','dangerbg'];
+}
+function render(){
+ const c=current(), e=estimate(), s=signalData();
+ const name=db.profile.name?`, ${db.profile.name}`:'';
+ document.getElementById('cycleSummary').innerHTML=c?
+ `<div class="bigdate">Cycle day ${c.day}</div><div class="muted">Started ${fmt(c.p.date)}${name}</div>`:
+ `<p class="muted">Add a period start date to begin tracking.</p>`;
+ if(e){
+   const conf=confidence(e);
+   document.getElementById('ovulationSummary').innerHTML=
+   `<div class="bigdate">${fmt(e.center)}</div>
+    <p class="muted">${e.label}. Estimated window: ${fmt(addDays(e.center,-e.spread))} to ${fmt(addDays(e.center,e.spread))}.</p>
+    <span class="badge ${conf[1]}">${conf[0]} data confidence</span>
+    <p class="footer-note">This is an estimate. Ovulation timing can vary, including from cycle to cycle.</p>`;
+ }else document.getElementById('ovulationSummary').innerHTML='<p class="muted">Add a period start date first.</p>';
+
+ let signalHTML='';
+ signalHTML+=`<div class="signal"><div><b>Ovulation test</b><br><small>${s.positive?`Latest positive: ${fmt(s.positive.date)}`:'No positive test recorded recently'}</small></div><span class="badge">${s.positive?'LH signal':'No data'}</span></div>`;
+ signalHTML+=`<div class="signal"><div><b>Cervical mucus</b><br><small>${s.mucus?`Latest watery/egg-white observation: ${fmt(s.mucus.date)}`:'No fertile-type mucus recorded'}</small></div><span class="badge">${s.mucus?'Fertility sign':'No data'}</span></div>`;
+ signalHTML+=`<div class="signal"><div><b>BBT</b><br><small>${s.bbt.status==='rise'?`Possible sustained rise beginning ${fmt(s.bbt.rise.date)}`:'No clear rise pattern detected'}</small></div><span class="badge">${s.bbt.status==='rise'?'Pattern detected':'No pattern'}</span></div>`;
+ document.getElementById('signals').innerHTML=signalHTML;
+
+ let ev=e?`<div class="statgrid">
+ <div class="stat"><b>${e.base.value}d</b><span>Cycle baseline</span></div>
+ <div class="stat"><b>${e.base.n||'—'}</b><span>Calculated cycles</span></div>
+ <div class="stat"><b>${e.spread}d</b><span>Estimate spread</span></div></div>
+ <p class="muted" style="margin-top:12px">The app starts with cycle history, then gives more weight to observed fertility signals when available. It does not call any date “confirmed ovulation.”</p>`:
+ '<p class="muted">More period and daily observations will make the explanation more informative.</p>';
+ document.getElementById('evidence').innerHTML=ev;
+ renderLogs(); renderPeriods(); renderStats(); loadProfile();
+}
+function saveLog(){
+ const date=document.getElementById('logDate').value||isoToday();
+ const item={date,mood:mood.value,pain:pain.value,mucus:mucus.value,bbt:bbt.value?Number(bbt.value):null,opk:opk.value,notes:notes.value.trim()};
+ db.logs=db.logs.filter(x=>x.date!==date); db.logs.push(item); saveDB(); clearLogForm(); render();
+ alert('Daily log saved.');
+}
+function clearLogForm(){logDate.value=isoToday();mood.value='Not recorded';pain.value='None';mucus.value='Not recorded';bbt.value='';opk.value='Not tested';notes.value=''}
+function renderLogs(){
+ const x=[...db.logs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+ logHistory.innerHTML=x.length?`<table><tr><th>Date</th><th>Mucus</th><th>BBT</th><th>OPK</th></tr>${x.map(i=>`<tr><td>${fmt(i.date)}</td><td>${i.mucus}</td><td>${i.bbt??'—'}</td><td>${i.opk}</td></tr>`).join('')}</table>`:'<p class="muted">No daily observations yet.</p>';
+}
+function savePeriod(){
+ const date=periodDate.value;if(!date)return alert('Choose a period start date.');
+ const item={date,bleedDays:bleedDays.value?Number(bleedDays.value):null,flow:flow.value,symptoms:periodSymptoms.value.trim()};
+ db.periods=db.periods.filter(x=>x.date!==date);db.periods.push(item);db.periods.sort((a,b)=>a.date.localeCompare(b.date));saveDB();
+ periodDate.value='';bleedDays.value='';flow.value='Not recorded';periodSymptoms.value='';render();alert('Period saved.');
+}
+function renderPeriods(){
+ const p=recentPeriods();
+ periodHistory.innerHTML=p.length?`<table><tr><th>Start</th><th>Cycle</th><th>Bleeding</th><th>Flow</th></tr>${p.map((x,i)=>{
+ const older=p[i+1]; const len=older?diff(older.date,x.date):'—';
+ return `<tr><td>${fmt(x.date)}</td><td>${len==='—'?'—':len+'d'}</td><td>${x.bleedDays?x.bleedDays+'d':'—'}</td><td>${x.flow}</td></tr>`;
+ }).join('')}</table>`:'<p class="muted">No periods recorded yet.</p>';
+}
+function renderStats(){
+ const ls=cycleLengths(), b=baseline();
+ stats.innerHTML=`<div class="statgrid"><div class="stat"><b>${ls.length?Math.min(...ls):'—'}</b><span>Shortest cycle</span></div><div class="stat"><b>${ls.length?Math.max(...ls):'—'}</b><span>Longest cycle</span></div><div class="stat"><b>${b.value}</b><span>Baseline cycle</span></div></div>
+ <p class="muted" style="margin-top:12px">${ls.length<2?'Add at least two period intervals for a calculated cycle baseline.':'Baseline uses the median of your recorded cycle lengths, rather than assuming every cycle is identical.'}</p>`;
+}
+function saveProfile(){db.profile={name:profileName.value.trim(),usualCycle:usualCycle.value,reminder:reminder.value};saveDB();render();alert('Profile saved.')}
+function loadProfile(){profileName.value=db.profile.name||'';usualCycle.value=db.profile.usualCycle||'';reminder.value=db.profile.reminder||'Off'}
+function showSection(id,btn){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');if(id==='home')render()}
+logDate.value=isoToday(); render();
+</script>
+</body>
+</html>
